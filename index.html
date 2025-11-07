@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For You — A Little Surprise</title>
+  <style>
+    :root{--bg:#fff5f8;--accent:#ff7aa2;--muted:#7a6b77}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#fff8fb 0%,#fff5f8 50%,#fff0f6 100%);
+      color:var(--muted); display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .card{width:100%;max-width:820px;background:rgba(255,255,255,0.6);backdrop-filter: blur(6px); border-radius:20px;padding:28px;box-shadow:0 10px 40px rgba(110,60,80,0.12);position:relative;overflow:hidden}
+    h1{margin:0 0 8px;font-size:28px;color:#4a2350}
+    p.lead{margin:0 0 20px;font-size:15px;color:#6b5570}
+
+    .controls{display:flex;gap:12px;flex-wrap:wrap}
+    button{background:linear-gradient(90deg,var(--accent),#ff99c2);border:0;padding:12px 16px;border-radius:12px;color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(255,122,162,0.18)}
+    button.ghost{background:transparent;color:var(--accent);box-shadow:none;border:2px solid rgba(255,122,162,0.12)}
+
+    .notes{margin-top:18px;min-height:64px}
+    .note{background:rgba(255,255,255,0.8);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(120,60,90,0.06);transform-origin:left top;}
+
+    /* chase game */
+    .game-area{height:220px;border-radius:12px;background:linear-gradient(180deg,rgba(255,250,252,1),rgba(255,245,249,0.7));display:flex;align-items:center;justify-content:center;margin-top:18px;position:relative;overflow:hidden}
+    .heart-btn{position:absolute;width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:white;font-weight:700;cursor:pointer;user-select:none}
+    .heart{width:44px;height:44px;background:radial-gradient(circle at 30% 35%,#fff,#ffaccf 30%);border-radius:50%;display:inline-block;transform:rotate(-45deg);position:relative}
+    .heart:before,.heart:after{content:"";position:absolute;width:44px;height:44px;border-radius:50%;background:inherit}
+    .heart:before{top:-22px;left:0}
+    .heart:after{left:22px;top:0}
+
+    .overlay{position:fixed;inset:0;background:linear-gradient(180deg,rgba(74,35,80,0.36),rgba(255,255,255,0.02));display:flex;align-items:center;justify-content:center;padding:30px}
+    .modal{background:white;border-radius:16px;padding:28px;max-width:720px;box-shadow:0 20px 60px rgba(90,40,70,0.18)}
+    .letter{white-space:pre-wrap;color:#4b2542}
+
+    /* floating hearts */
+    .floating-heart{position:fixed;pointer-events:none;width:18px;height:18px;opacity:0;transform:translate(-50%,-50%) scale(0.6);will-change:transform,opacity}
+
+    footer{margin-top:18px;font-size:12px;color:#9b7e90}
+
+    @keyframes pop {0%{transform:translate(-50%,-50%) scale(0.6);opacity:0}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  </style>
+</head>
+<body>
+  <div class="card" id="app">
+    <h1>For my begum hazurr Ansa Areej ❤️</h1>
+    <p class="lead">Soft and romantic — a little interactive surprise. Tap, chase, and discover.</p>
+
+    <div class="controls">
+      <button id="revealBtn">Click me — reveal a note</button>
+      <button id="gotoGame" class="ghost">Play: catch the heart</button>
+      <button id="finalBtn" class="ghost">Share the big reveal</button>
+    </div>
+
+    <div class="notes" id="notes"></div>
+
+    <div class="game-area" id="gameArea" style="display:none">
+      <div id="movingHeart" class="heart-btn" style="background:linear-gradient(45deg,#ff6fa1,#ff94bd);left:50%;top:50%">
+        <div class="heart"></div>
+      </div>
+      <div style="position:absolute;left:12px;top:12px;font-weight:700;color:#5a3248">Score: <span id="score">0</span></div>
+    </div>
+
+    <footer>Tip: move your finger or mouse to make little hearts float ✨</footer>
+  </div>
+
+  <div id="finalOverlay" class="overlay" style="display:none">
+    <div class="modal">
+      <h2 style="margin-top:0;color:#742a58">A little letter...</h2>
+      <div class="letter" id="letterText"></div>
+      <div style="text-align:right;margin-top:18px"><button id="closeLetter">Close</button></div>
+    </div>
+  </div>
+
+  <script>
+    // --- Notes data ---
+    const notes = [
+      "Tu meri Biwi hi ha",
+      "I might be slow but I do make progress.",
+      "Me sholly but tu azeez ha mujy.",
+      "I love you ok naa",
+      "YOU IS MINE",
+      "Kal miltay haina"
+      
+    ];
+
+    const notesContainer = document.getElementById('notes');
+    const revealBtn = document.getElementById('revealBtn');
+    let shown = 0;
+
+    revealBtn.addEventListener('click', ()=>{
+      if(shown >= notes.length) {
+        revealBtn.disabled = true; revealBtn.textContent = 'All notes revealed';
+        return;
+      }
+      const n = document.createElement('div');
+      n.className = 'note'; n.textContent = notes[shown++];
+      notesContainer.prepend(n);
+      n.animate([{transform:'translateY(-6px) scale(0.98)',opacity:0},{transform:'translateY(0) scale(1)',opacity:1}],{duration:420,easing:'cubic-bezier(.2,.9,.2,1)'});
+    });
+
+    // --- Floating hearts on cursor/touch ---
+    const spawnHeart = (x,y) => {
+      const h = document.createElement('div');
+      h.className = 'floating-heart';
+      h.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18"><path fill="url(#g)" d="M12 21s-7.5-4.7-9.2-7.2C-0.4 9.6 3 .5 9 5.6 12 8 12 8 12 8s0 0 3-2.4c6-5 9.4 4 6.2 8.2C19.5 16.3 12 21 12 21z"></path></svg>';
+      h.style.left = x + 'px'; h.style.top = y + 'px';
+      h.style.opacity = '0';
+      document.body.appendChild(h);
+      requestAnimationFrame(()=>{ h.style.opacity='1'; h.style.animation='pop 700ms ease-out forwards'; h.style.transform='translate(-50%,-50%) scale(1)'; });
+      setTimeout(()=>{ h.style.transition='transform 900ms ease-out, opacity 900ms'; h.style.transform = 'translate(-50%,-50%) translateY(-60px) scale(0.6)'; h.style.opacity='0'; }, 600);
+      setTimeout(()=>h.remove(),1600);
+    }
+
+    ['mousemove','touchmove','touchstart'].forEach(evt=>{
+      window.addEventListener(evt,(e)=>{
+        let x,y;
+        if(e.touches && e.touches[0]){x=e.touches[0].clientX; y=e.touches[0].clientY;} else {x=e.clientX; y=e.clientY}
+        // spawn occasionally
+        if(Math.random() < 0.22) spawnHeart(x,y);
+      },{passive:true});
+    });
+
+    // --- Mini game: chase the heart ---
+    const gotoGame = document.getElementById('gotoGame');
+    const gameArea = document.getElementById('gameArea');
+    const moving = document.getElementById('movingHeart');
+    const scoreEl = document.getElementById('score');
+    let score = 0;
+    let chasing = false;
+
+    gotoGame.addEventListener('click', ()=>{
+      gameArea.style.display = 'block';
+      gameArea.scrollIntoView({behavior:'smooth',block:'center'});
+      startChase();
+    });
+
+    function startChase(){
+      score = 0; scoreEl.textContent = score; moving.style.left = '50%'; moving.style.top = '50%';
+      chasing = true;
+      moving.addEventListener('click', catchHeart);
+      gameArea.addEventListener('mousemove', evade);
+      gameArea.addEventListener('touchmove', evade,{passive:true});
+      // small random jitters
+      moving.__j = setInterval(()=>{ if(!chasing) return; const x = Math.random()*100; const y = Math.random()*100; moving.style.left = x + '%'; moving.style.top = y + '%'; }, 1800);
+    }
+
+    function stopChase(){
+      chasing=false; moving.removeEventListener('click',catchHeart); gameArea.removeEventListener('mousemove',evade); gameArea.removeEventListener('touchmove',evade);
+      clearInterval(moving.__j);
+    }
+
+    function catchHeart(){
+      score++; scoreEl.textContent = score;
+      // celebration small hearts
+      for(let i=0;i<10;i++){ setTimeout(()=>spawnHeart(window.innerWidth*Math.random(), window.innerHeight*Math.random()), i*45); }
+      if(score>=5){ stopChase(); showFinal(); }
+    }
+
+    function evade(e){
+      const rect = gameArea.getBoundingClientRect();
+      let x = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      let y = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+      // if cursor near heart, move heart away
+      const hx = moving.getBoundingClientRect().left + moving.offsetWidth/2;
+      const hy = moving.getBoundingClientRect().top + moving.offsetHeight/2;
+      const dx = hx - x, dy = hy - y; const dist = Math.sqrt(dx*dx+dy*dy);
+      if(dist < 120){
+        // push to opposite direction, constrained inside area
+        let nx = (hx + (dx/dist)*120) - rect.left; let ny = (hy + (dy/dist)*120) - rect.top;
+        nx = Math.max(30, Math.min(rect.width-30, nx)); ny = Math.max(30, Math.min(rect.height-30, ny));
+        moving.style.left = (nx/rect.width*100) + '%'; moving.style.top = (ny/rect.height*100) + '%';
+      }
+    }
+
+    // --- Final reveal ---
+    const finalBtn = document.getElementById('finalBtn');
+    const finalOverlay = document.getElementById('finalOverlay');
+    const letterText = document.getElementById('letterText');
+    const closeLetter = document.getElementById('closeLetter');
+
+    function showFinal(){
+      const letter = `My love,\n\nThis little page is a tiny echo of the way you make my heart move — playful, soft, and full of light. I built this just for you because no line of code could hold how grateful I am to be near you.\n\nAlways,\nYours ❤️`;
+      letterText.textContent = letter;
+      finalOverlay.style.display = 'flex';
+      // confetti (simple)
+      for(let i=0;i<60;i++){ setTimeout(()=>{
+        const c = document.createElement('div'); c.style.position='fixed'; c.style.left=(10+Math.random()*80)+'%'; c.style.top=(10+Math.random()*80)+'%'; c.style.width='8px'; c.style.height='8px'; c.style.borderRadius='2px'; c.style.opacity='0.9'; c.style.transform='rotate('+Math.random()*180+'deg)'; c.style.background = ['#ff9ccf','#ffd1e6','#ffb3d9','#ffc4e6'][Math.floor(Math.random()*4)]; c.style.zIndex=9999; document.body.appendChild(c);
+        setTimeout(()=>{ c.style.transition='transform 1200ms ease-out, opacity 1200ms'; c.style.transform='translateY(60vh) rotate(720deg)'; c.style.opacity='0'; }, 20);
+        setTimeout(()=>c.remove(),1500);
+      }, i*18)}
+    }
+
+    finalBtn.addEventListener('click', ()=>{ showFinal(); });
+    closeLetter.addEventListener('click', ()=>{ finalOverlay.style.display='none'; });
+
+    // Allow pressing keyboard space to reveal note (cute)
+    window.addEventListener('keydown', (e)=>{ if(e.code==='Space'){ e.preventDefault(); revealBtn.click(); } });
+
+    // small accessibility: if reduced motion, disable animations
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if(mq.matches) document.documentElement.style.setProperty('--reduce-motion','1');
+
+    // helpful hint: make the page full-height on mobile
+    setTimeout(()=>{ document.querySelector('.card').style.opacity=1; }, 200);
+  </script>
+</body>
+</html>
